@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>やましゅうって何者？</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #ffffff;
+      --surface:  #f5f5f5;
+      --border:   #e8e8e8;
+      --ink:      #0a0a0a;
+      --muted:    #888888;
+      --radius:   14px;
+      --radius-sm: 8px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Noto Sans JP', sans-serif;
+      font-weight: 400;
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Layout ── */
+    .wrap {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 72px 0 52px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 52px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 4px 12px;
+      border-radius: 100px;
+      margin-bottom: 28px;
+    }
+
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2.8rem, 9vw, 4.2rem);
+      font-weight: 700;
+      line-height: 1.08;
+      letter-spacing: -.03em;
+      margin-bottom: 18px;
+    }
+
+    .hero-sub {
+      color: var(--muted);
+      font-size: .88rem;
+      font-weight: 300;
+    }
+
+    /* ── Section ── */
+    .section { margin-bottom: 44px; }
+
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .22em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Card ── */
+    .card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 5px;
+      overflow: hidden;
+      transition: border-color .15s;
+      cursor: pointer;
+    }
+
+    .card:hover { border-color: #c8c8c8; }
+
+    .card.open { border-color: var(--ink); }
+
+    .card-q {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 16px;
+      gap: 12px;
+      user-select: none;
+    }
+
+    .card-q-text { font-size: .88rem; font-weight: 500; }
+
+    .card-icon {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: var(--surface);
+      color: var(--muted);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 17px;
+      line-height: 1;
+      font-weight: 300;
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1), background .15s, color .15s;
+    }
+
+    .card.open .card-icon {
+      transform: rotate(45deg);
+      background: var(--ink);
+      color: #fff;
+    }
+
+    .card-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .32s cubic-bezier(.4,0,.2,1);
+    }
+
+    .card-body-inner {
+      padding: 12px 16px 16px;
+      font-size: .86rem;
+      color: var(--muted);
+      line-height: 1.85;
+      border-top: 1px solid var(--border);
+    }
+
+    .card-body-inner strong { color: var(--ink); font-weight: 500; }
+
+    /* ── Age mini-game ── */
+    .age-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 15px 16px;
+      margin-bottom: 5px;
+      transition: border-color .15s;
+    }
+
+    .age-card.touched { border-color: var(--ink); }
+
+    .age-q-row {
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; user-select: none;
+    }
+
+    .age-q-text { font-size: .88rem; font-weight: 500; }
+
+    .age-tap {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: .7rem;
+      font-weight: 600;
+      color: var(--muted);
+      opacity: 0;
+      transition: opacity .15s;
+    }
+
+    .age-card:hover .age-tap { opacity: 1; }
+
+    .age-steps { max-height: 0; overflow: hidden; transition: max-height .3s ease, margin-top .3s ease; }
+    .age-steps.open { max-height: 200px; margin-top: 14px; }
+
+    .age-prompt { font-size: .83rem; color: var(--muted); margin-bottom: 10px; }
+
+    .age-row { display: flex; gap: 8px; }
+
+    .age-input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--ink);
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: .88rem;
+      padding: 9px 12px;
+      outline: none;
+      transition: border-color .15s;
+    }
+
+    .age-input:focus { border-color: var(--ink); }
+    .age-input::placeholder { color: #ccc; }
+
+    .age-btn {
+      background: var(--ink);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: #fff;
+      cursor: pointer;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: .8rem;
+      font-weight: 600;
+      padding: 9px 18px;
+      transition: opacity .15s, transform .1s;
+      white-space: nowrap;
+    }
+
+    .age-btn:hover { opacity: .8; }
+    .age-btn:active { transform: scale(.97); }
+
+    .age-answer { display: none; font-size: .86rem; color: var(--muted); line-height: 1.85; }
+    .age-answer.show { display: block; }
+    .age-answer strong { color: var(--ink); font-weight: 700; font-size: 1.05em; }
+
+    /* ── Talk cards ── */
+    .talk-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 15px 18px;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .talk-q { font-size: .88rem; font-weight: 500; }
+
+    .talk-cta {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: .7rem;
+      font-weight: 600;
+      color: var(--muted);
+      white-space: nowrap;
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 3px 11px;
+    }
+
+    /* ── Divider ── */
+    .divider { height: 1px; background: var(--border); margin: 40px 0; }
+
+    /* ── Question form ── */
+    .form-block {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 28px 22px;
+    }
+
+    .form-block h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .form-block p {
+      font-size: .83rem;
+      color: var(--muted);
+      margin-bottom: 18px;
+      line-height: 1.75;
+    }
+
+    .form-textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--ink);
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: .86rem;
+      line-height: 1.7;
+      padding: 11px 13px;
+      resize: vertical;
+      min-height: 88px;
+      outline: none;
+      transition: border-color .15s;
+      margin-bottom: 10px;
+    }
+
+    .form-textarea:focus { border-color: var(--ink); }
+    .form-textarea::placeholder { color: #ccc; }
+
+    .form-submit {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--ink);
+      border: none;
+      border-radius: 100px;
+      color: #fff;
+      cursor: pointer;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: .82rem;
+      font-weight: 600;
+      padding: 10px 22px;
+      transition: opacity .15s, transform .1s;
+    }
+
+    .form-submit:hover { opacity: .8; }
+    .form-submit:active { transform: scale(.98); }
+    .form-submit:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+    .form-msg { margin-top: 12px; font-size: .82rem; display: none; }
+    .form-msg.ok  { color: #16a34a; display: block; }
+    .form-msg.err { color: #dc2626; display: block; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 0 24px 52px;
+      color: #ccc;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: .72rem;
+      letter-spacing: .04em;
+    }
+
+    footer a { color: #bbb; text-decoration: none; transition: color .15s; }
+    footer a:hover { color: var(--muted); }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero { animation: fadeUp .5s ease both; }
+    .section { animation: fadeUp .5s ease both; }
+    .section:nth-child(1) { animation-delay: .06s; }
+    .section:nth-child(2) { animation-delay: .10s; }
+    .section:nth-child(3) { animation-delay: .14s; }
+    .section:nth-child(4) { animation-delay: .18s; }
+    .section:nth-child(5) { animation-delay: .22s; }
+    .section:nth-child(6) { animation-delay: .26s; }
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ── Hero ── -->
+  <div class="hero">
+    <div class="badge">神山まるごと高専 · 2年生クラマネ</div>
+    <h1>やましゅうって<br>何者？</h1>
+    <p class="hero-sub">気になることをタップして聞いてみて。</p>
+  </div>
+
+  <!-- Profile -->
+  <section class="section">
+    <div class="section-label">Profile</div>
+
+    <div class="card" onclick="toggle(this)">
+      <div class="card-q">
+        <span class="card-q-text">名前は？なんて呼べばいい？</span>
+        <span class="card-icon">+</span>
+      </div>
+      <div class="card-body">
+        <div class="card-body-inner">
+          山本 周（やまもと しゅう）。<br>
+          前の学校では <strong>やましゅう</strong> と呼ばれていました。呼びやすいやつでどうぞ。
+        </div>
+      </div>
+    </div>
+
+    <div class="card" onclick="toggle(this)">
+      <div class="card-q">
+        <span class="card-q-text">出身はどこ？</span>
+        <span class="card-icon">+</span>
+      </div>
+      <div class="card-body">
+        <div class="card-body-inner">新潟県新潟市です。</div>
+      </div>
+    </div>
+
+    <div class="card" onclick="toggle(this)">
+      <div class="card-q">
+        <span class="card-q-text">誕生日は？</span>
+        <span class="card-icon">+</span>
+      </div>
+      <div class="card-body">
+        <div class="card-body-inner">4月25日。もうすぐだよ。</div>
+      </div>
+    </div>
+
+    <div class="card" onclick="toggle(this)">
+      <div class="card-q">
+        <span class="card-q-text">血液型は？</span>
+        <span class="card-icon">+</span>
+      </div>
+      <div class="card-body">
+        <div class="card-body-inner">A型です。</div>
+      </div>
+    </div>
+
+    <!-- Age mini-game -->
+    <div class="age-card" id="age-card">
+      <div class="age-q-row" onclick="openAge()">
+        <span class="age-q-text">何歳？</span>
+        <span class="age-tap">タップして聞いてみる →</span>
+      </div>
+      <div class="age-steps" id="age-steps">
+        <div id="age-guess-block">
+          <div class="age-prompt">ちょっと待って。何歳に見える？</div>
+          <div class="age-row">
+            <input class="age-input" id="age-input" type="number" min="1" max="99" placeholder="〇〇歳"
+              onkeydown="if(event.key==='Enter') revealAge()">
+            <button class="age-btn" onclick="revealAge()">送信</button>
+          </div>
+        </div>
+        <div class="age-answer" id="age-answer"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Favorites -->
+  <section class="section">
+    <div class="section-label">Favorites</div>
+
+    <div class="card" onclick="toggle(this)">
+      <div class="card-q">
+        <span class="card-q-text">好きな食べ物は？</span>
+        <span class="card-icon">+</span>
+      </div>
+      <div class="card-body">
+        <div class="card-body-inner">
+          <strong>ビーフストロガノフ</strong>。ロシアの郷土料理です。<br>
+          食べたことある人がいたらぜひ語りましょう。
+        </div>
+      </div>
+    </div>
+
+    <div class="card" onclick="toggle(this)">
+      <div class="card-q">
+        <span class="card-q-text">趣味は？</span>
+        <span class="card-icon">+</span>
+      </div>
+      <div class="card-body">
+        <div class="card-body-inner">
+          ソフトテニス・ゴルフ・写真・ボーリング（ハイスコア <strong>230</strong>！）。<br>
+          あとピックルボールを始めようとしてます。知ってる人いたら教えて。
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Private -->
+  <section class="section">
+    <div class="section-label">Private</div>
+
+    <div class="card" onclick="toggle(this)">
+      <div class="card-q">
+        <span class="card-q-text">彼女いる？結婚してる？</span>
+        <span class="card-icon">+</span>
+      </div>
+      <div class="card-body">
+        <div class="card-body-inner">いません…😢</div>
+      </div>
+    </div>
+
+    <div class="card" onclick="toggle(this)">
+      <div class="card-q">
+        <span class="card-q-text">SNSやってる？</span>
+        <span class="card-icon">+</span>
+      </div>
+      <div class="card-body">
+        <div class="card-body-inner">「<strong>山本周</strong>」で探してみてください。出てきます。</div>
+      </div>
+    </div>
+
+    <div class="card" onclick="toggle(this)">
+      <div class="card-q">
+        <span class="card-q-text">苦手なことある？</span>
+        <span class="card-icon">+</span>
+      </div>
+      <div class="card-body">
+        <div class="card-body-inner">カラオケ…。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Work -->
+  <section class="section">
+    <div class="section-label">Work &amp; Class</div>
+
+    <div class="card" onclick="toggle(this)">
+      <div class="card-q">
+        <span class="card-q-text">どんな授業するの？何が得意？</span>
+        <span class="card-icon">+</span>
+      </div>
+      <div class="card-body">
+        <div class="card-body-inner"><strong>数学・テクノロジー系</strong>の授業を担当します。</div>
+      </div>
+    </div>
+
+    <div class="card" onclick="toggle(this)">
+      <div class="card-q">
+        <span class="card-q-text">数学と情報、どっちが好き？</span>
+        <span class="card-icon">+</span>
+      </div>
+      <div class="card-body">
+        <div class="card-body-inner">情報が基本好きです。数学は高校レベルまでなら大好き。</div>
+      </div>
+    </div>
+
+    <div class="card" onclick="toggle(this)">
+      <div class="card-q">
+        <span class="card-q-text">前の学校ではどんな先生だった？</span>
+        <span class="card-icon">+</span>
+      </div>
+      <div class="card-body">
+        <div class="card-body-inner">
+          聖学院中学・高校で5年間、数学・情報・探究を担当。<br>
+          「<strong>やましゅう</strong>」と呼ばれていました。
+        </div>
+      </div>
+    </div>
+
+    <div class="card" onclick="toggle(this)">
+      <div class="card-q">
+        <span class="card-q-text">学生時代の部活は？</span>
+        <span class="card-icon">+</span>
+      </div>
+      <div class="card-body">
+        <div class="card-body-inner">ソフトテニス。ちょっとだけ弓道も。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Let's talk -->
+  <section class="section">
+    <div class="section-label">Let's Talk</div>
+    <div class="talk-card">
+      <span class="talk-q">なんで神山に来たの？</span>
+      <span class="talk-cta">直接話そう</span>
+    </div>
+    <div class="talk-card">
+      <span class="talk-q">なんで先生になったの？</span>
+      <span class="talk-cta">直接話そう</span>
+    </div>
+  </section>
+
+  <!-- Question form -->
+  <div class="divider"></div>
+
+  <section class="section">
+    <div class="form-block">
+      <h3>答えが見つからなかった？</h3>
+      <p>なんでも送ってください。<br>やましゅうに届きます。後でQ&Aに追加されるかも。</p>
+      <textarea
+        class="form-textarea"
+        id="q-text"
+        placeholder="気になることを書いてね..."
+        maxlength="400"
+      ></textarea>
+      <button class="form-submit" id="q-btn" onclick="submitQuestion()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+        送信する
+      </button>
+      <div class="form-msg" id="q-msg"></div>
+    </div>
+  </section>
+
+</div><!-- /.wrap -->
+
+<footer>
+  © 2026 Shu Yamamoto &nbsp;·&nbsp;
+  <a href="https://github.com/yamashu00/who-is-yamashu" target="_blank" rel="noopener">GitHub</a>
+</footer>
+
+<script>
+  /* ─── GAS endpoint ─────────────────────────────────────────
+   * Google Apps Script の Web App URL をここに差し替える
+   * 設定手順は README.md を参照
+   * ──────────────────────────────────────────────────────── */
+  const GAS_URL = 'YOUR_GAS_WEB_APP_URL';
+
+  /* ── Accordion ── */
+  function toggle(card) {
+    const body   = card.querySelector('.card-body');
+    const isOpen = card.classList.contains('open');
+
+    document.querySelectorAll('.card.open').forEach(c => {
+      c.classList.remove('open');
+      c.querySelector('.card-body').style.maxHeight = null;
+    });
+
+    if (!isOpen) {
+      card.classList.add('open');
+      body.style.maxHeight = body.scrollHeight + 'px';
+    }
+  }
+
+  /* ── Age mini-game ── */
+  let ageTouched = false;
+
+  function openAge() {
+    if (ageTouched) return;
+    ageTouched = true;
+    document.getElementById('age-card').classList.add('touched');
+    document.getElementById('age-steps').classList.add('open');
+    setTimeout(() => document.getElementById('age-input').focus(), 320);
+  }
+
+  function revealAge() {
+    const val = document.getElementById('age-input').value.trim();
+    if (!val) return;
+    const guess = parseInt(val, 10);
+    const c =
+      guess < 25   ? '若く見てくれてありがとう笑' :
+      guess <= 28  ? 'ちょっと若めに見てくれた！' :
+      guess === 30 ? 'ぴったり！すごい。' :
+      guess <= 33  ? 'まあまあ近い！' :
+                     '……ちょっと老けて見えた？';
+
+    document.getElementById('age-guess-block').style.display = 'none';
+    const ans = document.getElementById('age-answer');
+    ans.innerHTML = `「${guess}歳」か〜。${c}<br>正解は <strong>30歳</strong> です。`;
+    ans.classList.add('show');
+  }
+
+  /* ── Question submission (Google Apps Script) ── */
+  async function submitQuestion() {
+    const text = document.getElementById('q-text').value.trim();
+    const btn  = document.getElementById('q-btn');
+    const msg  = document.getElementById('q-msg');
+    if (!text) return;
+
+    btn.disabled    = true;
+    btn.textContent = '送信中...';
+    msg.className   = 'form-msg';
+
+    try {
+      await fetch(GAS_URL, {
+        method: 'POST',
+        mode:   'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question:  text,
+          timestamp: new Date().toISOString(),
+          ua:        navigator.userAgent,
+        }),
+      });
+      msg.textContent = '送信しました！ありがとう 👍';
+      msg.className   = 'form-msg ok';
+      document.getElementById('q-text').value = '';
+    } catch {
+      msg.textContent = '送信に失敗しました。もう一度試してみて。';
+      msg.className   = 'form-msg err';
+    } finally {
+      btn.disabled  = false;
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> 送信する`;
+    }
+  }
+</script>
+</body>
+</html>
