@@ -668,13 +668,12 @@
 
     try {
       await fetch(GAS_URL, {
-        method: 'POST',
-        mode:   'no-cors',
-        headers: { 'Content-Type': 'application/json' },
+        method:      'POST',
+        mode:        'no-cors',
+        credentials: 'include',
         body: JSON.stringify({
           question:  text,
           timestamp: new Date().toISOString(),
-          ua:        navigator.userAgent,
         }),
       });
       msg.textContent = '送信しました！ありがとう 👍';
