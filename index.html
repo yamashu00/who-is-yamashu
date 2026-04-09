@@ -282,11 +282,49 @@
       line-height: 1.75;
     }
 
-    .form-iframe-wrap {
-      margin-top: 4px;
+    .form-textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
       border-radius: var(--radius-sm);
-      overflow: hidden;
+      color: var(--ink);
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: .86rem;
+      line-height: 1.7;
+      padding: 11px 13px;
+      resize: vertical;
+      min-height: 88px;
+      outline: none;
+      transition: border-color .15s;
+      margin-bottom: 10px;
     }
+
+    .form-textarea:focus { border-color: var(--ink); }
+    .form-textarea::placeholder { color: #ccc; }
+
+    .form-submit {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--ink);
+      border: none;
+      border-radius: 100px;
+      color: #fff;
+      cursor: pointer;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: .82rem;
+      font-weight: 600;
+      padding: 10px 22px;
+      transition: opacity .15s, transform .1s;
+    }
+
+    .form-submit:hover { opacity: .8; }
+    .form-submit:active { transform: scale(.98); }
+    .form-submit:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+    .form-msg { margin-top: 12px; font-size: .82rem; display: none; }
+    .form-msg.ok  { color: #16a34a; display: block; }
+    .form-msg.err { color: #dc2626; display: block; }
 
     /* ── Footer ── */
     footer {
@@ -564,16 +602,21 @@
   <section class="section">
     <div class="form-block">
       <h3>答えが見つからなかった？</h3>
-      <p>なんでも送ってください。やましゅうに届きます。</p>
-      <div class="form-iframe-wrap">
-        <iframe
-          src="https://docs.google.com/forms/d/e/1FAIpQLSfo_vkGBCjtwSzr0DQ7boMRzCHsvOl-CXdDA3gMfN-KhzWmLw/viewform?embedded=true"
-          frameborder="0"
-          marginheight="0"
-          marginwidth="0"
-          style="width:100%; min-height:420px; border:none; display:block;"
-        >読み込んでいます…</iframe>
-      </div>
+      <p>なんでも送ってください。やましゅうに届きます。後でQ&Aに追加されるかも。</p>
+      <textarea
+        class="form-textarea"
+        id="q-text"
+        placeholder="気になることを書いてね..."
+        maxlength="400"
+      ></textarea>
+      <button class="form-submit" id="q-btn" onclick="submitQuestion()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+        送信する
+      </button>
+      <div class="form-msg" id="q-msg"></div>
     </div>
   </section>
 
@@ -598,6 +641,37 @@
     if (!isOpen) {
       card.classList.add('open');
       body.style.maxHeight = body.scrollHeight + 'px';
+    }
+  }
+
+  /* ── Question submission → Google Forms (hidden) ── */
+  async function submitQuestion() {
+    const text = document.getElementById('q-text').value.trim();
+    const btn  = document.getElementById('q-btn');
+    const msg  = document.getElementById('q-msg');
+    if (!text) return;
+
+    btn.disabled    = true;
+    btn.textContent = '送信中...';
+    msg.className   = 'form-msg';
+
+    const body = new URLSearchParams();
+    body.append('entry.1054416898', text);
+
+    try {
+      await fetch(
+        'https://docs.google.com/forms/d/e/1FAIpQLSfo_vkGBCjtwSzr0DQ7boMRzCHsvOl-CXdDA3gMfN-KhzWmLw/formResponse',
+        { method: 'POST', mode: 'no-cors', body }
+      );
+      msg.textContent = '送信しました！ありがとう 👍';
+      msg.className   = 'form-msg ok';
+      document.getElementById('q-text').value = '';
+    } catch {
+      msg.textContent = '送信に失敗しました。もう一度試してみて。';
+      msg.className   = 'form-msg err';
+    } finally {
+      btn.disabled  = false;
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg> 送信する`;
     }
   }
 
